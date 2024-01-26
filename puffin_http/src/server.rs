@@ -12,6 +12,18 @@ use std::{
 /// Maximum size of the backlog of packets to send to a client if they aren't reading fast enough.
 const MAX_FRAMES_IN_QUEUE: usize = 30;
 
+#[derive(Default)]
+pub struct ServerOptions {
+    frame_view_max_recent: Option<usize>,
+}
+
+impl ServerOptions  {
+    pub fn set_frame_view_max_recent(mut self, max_recent: usize) -> Self {
+        self.frame_view_max_recent = Some(max_recent);
+        self
+    }
+}
+
 /// Listens for incoming connections
 /// and streams them puffin profiler data.
 ///
@@ -26,6 +38,10 @@ pub struct Server {
 impl Server {
     /// Start listening for connections on this addr (e.g. "0.0.0.0:8585")
     pub fn new(bind_addr: &str) -> anyhow::Result<Self> {
+        Self::new_options(bind_addr, ServerOptions::default())
+    }
+
+    pub fn new_options(bind_addr: &str, opts: ServerOptions) -> anyhow::Result<Self> {
         let tcp_listener = TcpListener::bind(bind_addr).context("binding server TCP socket")?;
         tcp_listener
             .set_nonblocking(true)
@@ -51,6 +67,10 @@ impl Server {
                     send_all_scopes: false,
                     frame_view: Default::default(),
                 };
+
+                if let Some(max_recent) = opts.frame_view_max_recent {
+                    server_impl.frame_view.set_max_recent(max_recent);
+                }
 
                 while let Ok(frame) = rx.recv() {
                     server_impl.frame_view.add_frame(frame.clone());

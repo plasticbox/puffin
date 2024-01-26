@@ -25,4 +25,4 @@ mod server;
 pub use client::Client;
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use server::Server;
+pub use server::{Server, ServerOptions};
