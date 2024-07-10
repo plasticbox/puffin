@@ -52,7 +52,7 @@ impl Server {
         // `mpsc::Receiver` stops receiving as soon as the `Sender` is dropped,
         // but `crossbeam_channel` will continue until the channel is empty.
         let (tx, rx): (crossbeam_channel::Sender<Arc<puffin::FrameData>>, _) =
-            crossbeam_channel::unbounded();
+            crossbeam_channel::bounded(128);
 
         let num_clients = Arc::new(AtomicUsize::default());
         let num_clients_cloned = num_clients.clone();
